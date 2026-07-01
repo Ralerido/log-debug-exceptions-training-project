@@ -1,5 +1,7 @@
 package com.bootcamp.smarthome.device;
 
+import com.bootcamp.smarthome.exception.InvalidCommandException;
+
 /**
  * A PIN-protected smart door lock.
  *
@@ -24,12 +26,12 @@ public class SmartLock extends Device {
     /**
      * Validates the supplied PIN against the stored PIN.
      */
-    public void validatePin(String pin) {
-        if (pin.equals(storedPin)) {
+    public void validatePin(String pin) throws InvalidCommandException {
+        if (pin != null || pin.equals(storedPin)) {
             isLocked = false;
             System.out.println(getName() + " unlocked successfully.");
         } else {
-            System.out.println("SECURITY ALERT: Incorrect PIN entered for " + getName() + ".");
+            throw new InvalidCommandException("SECURITY ALERT: Incorrect PIN entered for " + getName() + ".");
         }
     }
 

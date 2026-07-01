@@ -5,6 +5,7 @@ import com.bootcamp.smarthome.device.Device;
 import com.bootcamp.smarthome.device.SmartLight;
 import com.bootcamp.smarthome.device.SmartLock;
 import com.bootcamp.smarthome.device.SmartThermostat;
+import com.bootcamp.smarthome.exception.HomeAutomationException;
 
 /**
  * Entry point for the Smart Home Controller demo.
@@ -14,7 +15,7 @@ import com.bootcamp.smarthome.device.SmartThermostat;
  */
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws HomeAutomationException {
 
         HomeController controller = new HomeController();
 

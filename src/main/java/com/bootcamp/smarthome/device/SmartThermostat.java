@@ -1,5 +1,7 @@
 package com.bootcamp.smarthome.device;
 
+import com.bootcamp.smarthome.exception.InvalidValueException;
+
 /**
  * A programmable smart thermostat.
  *
@@ -25,10 +27,9 @@ public class SmartThermostat extends Device {
      *
      * Valid range: 10.0–35.0 inclusive.
      */
-    public void setTemperature(double temp) {
+    public void setTemperature(double temp) throws InvalidValueException {
         if (temp < 10.0 && temp > 35.0) {
-            System.out.println("Invalid temperature: " + temp + ". Must be between 10.0 and 35.0.");
-            return;
+            throw new InvalidValueException("temperature", temp, "10.0..35.0");
         }
         this.temperature = temp;
         System.out.println(getName() + " temperature set to " + temp + " °C");

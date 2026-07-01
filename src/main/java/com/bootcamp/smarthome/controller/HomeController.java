@@ -1,10 +1,11 @@
 package com.bootcamp.smarthome.controller;
 
 import com.bootcamp.smarthome.device.Device;
+import com.bootcamp.smarthome.exception.HomeAutomationException;
 
 /**
  * Central hub that manages all registered smart devices.
- *
+ * <p>
  * Devices are stored in a fixed-size array (maximum {@value #MAX_DEVICES}).
  * The controller routes commands to devices by their ID.
  */
@@ -30,7 +31,7 @@ public class HomeController {
         if (deviceCount >= MAX_DEVICES) {
             throw new IllegalStateException(
                     "Cannot add device '" + device.getDeviceId() +
-                    "': controller is at maximum capacity (" + MAX_DEVICES + ").");
+                            "': controller is at maximum capacity (" + MAX_DEVICES + ").");
         }
         devices[deviceCount] = device;
         deviceCount++;
@@ -43,7 +44,7 @@ public class HomeController {
 
     /**
      * Finds a registered device by its ID.
-     *
+     * <p>
      * Returns {@code null} when no matching device is found.
      */
     public Device findDevice(String deviceId) {
@@ -62,36 +63,44 @@ public class HomeController {
     /**
      * Parses {@code fullCommand}, resolves the target device, and delegates
      * execution to {@link Device#executeCommand(String)}.
-     *
+     * <p>
      * Full command format: {@code "DEVICE_ID ACTION [VALUE]"}
      * Example: {@code "LIGHT_01 SET_BRIGHTNESS 75"}
      *
      * @param fullCommand the full command string
      */
-    public void sendCommand(String fullCommand) {
+    public void sendCommand(String fullCommand) throws HomeAutomationException {
         String deviceId = CommandParser.extractDeviceId(fullCommand);
-        String command  = CommandParser.extractCommand(fullCommand);
+        String command = CommandParser.extractCommand(fullCommand);
+        try {
 
-        Device device = findDevice(deviceId);
+            Device device = findDevice(deviceId);
 
-        if (device == null) {
-            System.out.println("Device not found: " + deviceId);
-            return;
+            if (device == null) {
+                System.out.println("Device not found: " + deviceId);
+                return;
+            }
+
+            if (!device.isOnline()) {
+                System.out.println("WARNING: Device '" + deviceId + "' is offline — command skipped.");
+                return;
+            }
+
+            device.executeCommand(command);
+        } catch (HomeAutomationException e) {
+            throw new HomeAutomationException("Command '" + fullCommand + "' failed for device '" + deviceId + "'",e);
+        } finally {
+            System.out.println("Command processing ended for device '" + deviceId + "'");
         }
-
-        if (!device.isOnline()) {
-            System.out.println("WARNING: Device '" + deviceId + "' is offline — command skipped.");
-            return;
-        }
-
-        device.executeCommand(command);
     }
 
     // -------------------------------------------------------------------------
     // Utility
     // -------------------------------------------------------------------------
 
-    /** Prints the status of every registered device. */
+    /**
+     * Prints the status of every registered device.
+     */
     public void printAllDevices() {
         System.out.println("=== Registered Devices (" + deviceCount + "/" + MAX_DEVICES + ") ===");
         for (int i = 0; i < deviceCount; i++) {
