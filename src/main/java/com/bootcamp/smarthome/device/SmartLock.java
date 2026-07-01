@@ -1,6 +1,9 @@
 package com.bootcamp.smarthome.device;
 
+import com.bootcamp.smarthome.controller.HomeController;
 import com.bootcamp.smarthome.exception.InvalidCommandException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A PIN-protected smart door lock.
@@ -12,6 +15,8 @@ public class SmartLock extends Device {
 
     private boolean isLocked;
     private final String storedPin;
+    // logger
+    private static final Logger logger = LoggerFactory.getLogger(SmartLock.class);
 
     public SmartLock(String deviceId, String name, boolean isOnline, String pin) {
         super(deviceId, name, isOnline);
@@ -31,6 +36,7 @@ public class SmartLock extends Device {
             isLocked = false;
             System.out.println(getName() + " unlocked successfully.");
         } else {
+            logger.error("SECURITY ALERT: Incorrect PIN entered for {}", getName());
             throw new InvalidCommandException("SECURITY ALERT: Incorrect PIN entered for " + getName() + ".");
         }
     }
@@ -41,7 +47,7 @@ public class SmartLock extends Device {
     }
 
     @Override
-    public void executeCommand(String command) {
+    public void executeCommand(String command) throws InvalidCommandException  {
         if (command.startsWith("UNLOCK")) {
             String[] parts = command.split(" ");
             String pin = (parts.length > 1) ? parts[1] : null;
@@ -53,7 +59,12 @@ public class SmartLock extends Device {
         } else if (command.equals("TURN_OFF")) {
             turnOff();
         } else {
-            System.out.println("Unknown command for SmartLock '" + getName() + "': " + command);
+            logger.debug(
+                    "Unknown command for SmartLock '{}' : {}",
+                    getName(),
+                    command
+            );
+            throw new InvalidCommandException("Unknown command for SmartLock '" + getName() + "': " + command);
         }
     }
 

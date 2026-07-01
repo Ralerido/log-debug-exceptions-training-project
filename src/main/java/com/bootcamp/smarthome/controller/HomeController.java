@@ -1,7 +1,11 @@
 package com.bootcamp.smarthome.controller;
 
 import com.bootcamp.smarthome.device.Device;
+import com.bootcamp.smarthome.exception.DeviceNotFoundException;
+import com.bootcamp.smarthome.exception.DeviceOfflineException;
 import com.bootcamp.smarthome.exception.HomeAutomationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Central hub that manages all registered smart devices.
@@ -15,6 +19,8 @@ public class HomeController {
 
     private final Device[] devices = new Device[MAX_DEVICES];
     private int deviceCount = 0;
+    // logger
+    private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
 
     // -------------------------------------------------------------------------
     // Device registration
@@ -72,22 +78,26 @@ public class HomeController {
     public void sendCommand(String fullCommand) throws HomeAutomationException {
         String deviceId = CommandParser.extractDeviceId(fullCommand);
         String command = CommandParser.extractCommand(fullCommand);
+
+        logger.debug("Processing command: {}", fullCommand);
         try {
 
             Device device = findDevice(deviceId);
 
             if (device == null) {
-                System.out.println("Device not found: " + deviceId);
-                return;
+                logger.debug("Device not found: {}", deviceId);
+                throw new DeviceNotFoundException("Device '" + deviceId + "' not found.");
             }
 
             if (!device.isOnline()) {
-                System.out.println("WARNING: Device '" + deviceId + "' is offline — command skipped.");
-                return;
+                logger.warn("Device '{}' is offline — command skipped.", deviceId);
+                throw new DeviceOfflineException("Device '" + deviceId + "' is offline.")       ;
             }
 
             device.executeCommand(command);
+            logger.debug("Command executed successfully for device '{}'", deviceId);
         } catch (HomeAutomationException e) {
+            logger.error("Command '" + fullCommand + "' failed for device '" + deviceId + "'", e);
             throw new HomeAutomationException("Command '" + fullCommand + "' failed for device '" + deviceId + "'",e);
         } finally {
             System.out.println("Command processing ended for device '" + deviceId + "'");

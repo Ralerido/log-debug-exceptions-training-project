@@ -1,5 +1,7 @@
 package com.bootcamp.smarthome.device;
 
+import com.bootcamp.smarthome.exception.InvalidCommandException;
+
 /**
  * Abstract base class representing a smart home device.
  *
@@ -16,7 +18,7 @@ public abstract class Device {
     private boolean isOnline;
     private boolean isOn;
 
-    public Device(String deviceId, String name, boolean isOnline) {
+    protected Device(String deviceId, String name, boolean isOnline) {
         this.deviceId = deviceId;
         this.name = name;
         this.isOnline = isOnline;
@@ -24,7 +26,7 @@ public abstract class Device {
     }
 
     // -------------------------------------------------------------------------
-    // Abstract behaviour — each device type handles its own commands
+    // Abstract behavior — each device type handles its own commands
     // -------------------------------------------------------------------------
 
     /**
@@ -37,7 +39,7 @@ public abstract class Device {
      *   "SET_TEMP 22.5"
      *   "UNLOCK 1234"
      */
-    public abstract void executeCommand(String command);
+    public abstract void executeCommand(String command) throws InvalidCommandException;
 
     // -------------------------------------------------------------------------
     // Shared behaviour
