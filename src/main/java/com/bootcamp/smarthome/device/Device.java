@@ -1,5 +1,6 @@
 package com.bootcamp.smarthome.device;
 
+import com.bootcamp.smarthome.exception.HomeAutomationException;
 import com.bootcamp.smarthome.exception.InvalidCommandException;
 
 /**
@@ -39,7 +40,7 @@ public abstract class Device {
      *   "SET_TEMP 22.5"
      *   "UNLOCK 1234"
      */
-    public abstract void executeCommand(String command) throws InvalidCommandException;
+    public abstract void executeCommand(String command) throws HomeAutomationException;
 
     // -------------------------------------------------------------------------
     // Shared behaviour

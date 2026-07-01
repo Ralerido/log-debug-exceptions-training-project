@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A PIN-protected smart door lock.
- *
+ * <p>
  * The lock can be locked or unlocked via a 4-digit PIN.
  * Every failed unlock attempt is treated as a security event.
  */
@@ -32,13 +32,12 @@ public class SmartLock extends Device {
      * Validates the supplied PIN against the stored PIN.
      */
     public void validatePin(String pin) throws InvalidCommandException {
-        if (pin != null || pin.equals(storedPin)) {
-            isLocked = false;
-            System.out.println(getName() + " unlocked successfully.");
-        } else {
+        if (pin == null || !pin.equals(storedPin)) {
             logger.error("SECURITY ALERT: Incorrect PIN entered for {}", getName());
             throw new InvalidCommandException("SECURITY ALERT: Incorrect PIN entered for " + getName() + ".");
         }
+        isLocked = false;
+        System.out.println(getName() + " unlocked successfully.");
     }
 
     public void lock() {
@@ -47,7 +46,7 @@ public class SmartLock extends Device {
     }
 
     @Override
-    public void executeCommand(String command) throws InvalidCommandException  {
+    public void executeCommand(String command) throws InvalidCommandException {
         if (command.startsWith("UNLOCK")) {
             String[] parts = command.split(" ");
             String pin = (parts.length > 1) ? parts[1] : null;

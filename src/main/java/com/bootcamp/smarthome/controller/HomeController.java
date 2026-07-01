@@ -54,7 +54,7 @@ public class HomeController {
      * Returns {@code null} when no matching device is found.
      */
     public Device findDevice(String deviceId) {
-        for (int i = 0; i <= deviceCount; i++) {
+        for (int i = 0; i < deviceCount; i++) {
             if (devices[i] != null && devices[i].getDeviceId().equals(deviceId)) {
                 return devices[i];
             }
