@@ -5,6 +5,8 @@ import com.bootcamp.smarthome.device.Device;
 import com.bootcamp.smarthome.device.SmartLight;
 import com.bootcamp.smarthome.device.SmartLock;
 import com.bootcamp.smarthome.device.SmartThermostat;
+import com.bootcamp.smarthome.exception.DeviceNotFoundException;
+import com.bootcamp.smarthome.exception.HomeAutomationException;
 
 /**
  * Entry point for the Smart Home Controller demo.
@@ -13,8 +15,19 @@ import com.bootcamp.smarthome.device.SmartThermostat;
  * exercise normal operation as well as edge cases and error conditions.
  */
 public class Main {
+    private static void runCommand(
+            HomeController controller,
+            String command
+    ) {
+        try {
+            controller.sendCommand(command);
+        } catch (HomeAutomationException | DeviceNotFoundException e) {
+            System.out.println("Command failed: " + e.getMessage());
+        }
+    }
 
     public static void main(String[] args) {
+
 
         HomeController controller = new HomeController();
 
@@ -32,35 +45,51 @@ public class Main {
         controller.printAllDevices();
 
         System.out.println("\n=== Scenario 1: Normal device commands ===");
-        controller.sendCommand("LIGHT_01 TURN_ON");
-        controller.sendCommand("LIGHT_02 TURN_ON");
-        controller.sendCommand("THERMO_01 SET_TEMP 22.5");
+        runCommand(controller, "LIGHT_01 TURN_ON");
+        runCommand(controller, "LIGHT_02 TURN_ON");
+        runCommand(controller, "THERMO_01 SET_TEMP 22.5");
+
 
         System.out.println("\n=== Scenario 2: Set brightness ===");
-        controller.sendCommand("LIGHT_01 SET_BRIGHTNESS 80");
+        runCommand(controller, "LIGHT_01 SET_BRIGHTNESS 80");
 
         System.out.println("\n=== Scenario 3: Invalid temperature ===");
         // This test calls setTemperature() directly to isolate temperature validation.
         Device found = controller.findDevice("THERMO_01");
         SmartThermostat mainThermostat = (SmartThermostat) found;
-        mainThermostat.setTemperature(99.0);
+        try{
+            mainThermostat.setTemperature(99.0);
+        }
+        catch (HomeAutomationException e) {
+            System.out.println("Command failed: " + e.getMessage());
+        }
+
 
         System.out.println("\n=== Scenario 4: Offline device ===");
         // LIGHT_03 is offline — command should be skipped with a warning
-        controller.sendCommand("LIGHT_03 TURN_ON");
+        runCommand(controller, "LIGHT_03 TURN_ON");
+
 
         System.out.println("\n=== Scenario 5: Unlock with correct PIN ===");
         // Direct call to validatePin() to demonstrate intended correct behaviour
         // (going through sendCommand() would strip the PIN via BUG-LG-2).
         Device foundLock = controller.findDevice("LOCK_01");
         SmartLock frontDoor = (SmartLock) foundLock;
-        frontDoor.validatePin("4321"); // should print "Front Door Lock unlocked successfully."
+        try{
+            frontDoor.validatePin("4321"); // should print "Front Door Lock unlocked successfully."
+        }
+        catch (HomeAutomationException e) {
+            System.out.println("Command failed: " + e.getMessage());
+        }
+
 
         System.out.println("\n=== Scenario 6: Unlock with null PIN ===");
-        controller.sendCommand("LOCK_02 UNLOCK");
+        runCommand(controller,  "LOCK_02 UNLOCK");
+
 
         System.out.println("\n=== Scenario 7: Find non-existent device ===");
-        controller.sendCommand("SENSOR_99 TURN_ON");
+        runCommand(controller, "SENSOR_99 TURN_ON");
+
 
         System.out.println("\n=== All scenarios complete ===");
         controller.printAllDevices();

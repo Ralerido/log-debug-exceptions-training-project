@@ -1,17 +1,21 @@
 package com.bootcamp.smarthome.controller;
 
 import com.bootcamp.smarthome.device.Device;
+import com.bootcamp.smarthome.exception.DeviceNotFoundException;
+import com.bootcamp.smarthome.exception.HomeAutomationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Central hub that manages all registered smart devices.
- *
+ * <p>
  * Devices are stored in a fixed-size array (maximum {@value #MAX_DEVICES}).
  * The controller routes commands to devices by their ID.
  */
 public class HomeController {
 
     public static final int MAX_DEVICES = 8;
-
+    private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
     private final Device[] devices = new Device[MAX_DEVICES];
     private int deviceCount = 0;
 
@@ -34,7 +38,7 @@ public class HomeController {
         }
         devices[deviceCount] = device;
         deviceCount++;
-        System.out.println("Device registered: " + device);
+        logger.info("Device registered: {}", device);
     }
 
     // -------------------------------------------------------------------------
@@ -43,11 +47,11 @@ public class HomeController {
 
     /**
      * Finds a registered device by its ID.
-     *
+     * <p>
      * Returns {@code null} when no matching device is found.
      */
     public Device findDevice(String deviceId) {
-        for (int i = 0; i <= deviceCount; i++) {
+        for (int i = 0; i < deviceCount; i++) {
             if (devices[i] != null && devices[i].getDeviceId().equals(deviceId)) {
                 return devices[i];
             }
@@ -62,29 +66,54 @@ public class HomeController {
     /**
      * Parses {@code fullCommand}, resolves the target device, and delegates
      * execution to {@link Device#executeCommand(String)}.
-     *
+     * <p>
      * Full command format: {@code "DEVICE_ID ACTION [VALUE]"}
      * Example: {@code "LIGHT_01 SET_BRIGHTNESS 75"}
      *
      * @param fullCommand the full command string
      */
-    public void sendCommand(String fullCommand) {
+    public void sendCommand(String fullCommand)
+            throws HomeAutomationException {
+
         String deviceId = CommandParser.extractDeviceId(fullCommand);
-        String command  = CommandParser.extractCommand(fullCommand);
+        String command = CommandParser.extractCommand(fullCommand);
 
-        Device device = findDevice(deviceId);
+        try {
+            Device device = findDevice(deviceId);
+            if (device == null) {
+                throw new DeviceNotFoundException("Device not found: " + deviceId);
+            }
+            device.executeCommand(command);
 
-        if (device == null) {
-            System.out.println("Device not found: " + deviceId);
-            return;
+            logger.debug("Command executed for device '{}'", deviceId);
+
+        } catch (HomeAutomationException e) {
+            logger.error(
+                    "Failed to process command for device '{}'",
+                    deviceId,
+                    e
+            );
+
+            throw new HomeAutomationException(
+                    "Could not execute command for device " + deviceId,
+                    e
+            );
+
         }
 
-        if (!device.isOnline()) {
-            System.out.println("WARNING: Device '" + deviceId + "' is offline — command skipped.");
-            return;
+        catch (DeviceNotFoundException e) {
+            logger.error(
+                    "Device '{}' was not found",
+                    deviceId,
+                    e
+            );
+            throw e;
+
         }
 
-        device.executeCommand(command);
+        finally {
+            logger.info("Command processing ended for device [{}]", deviceId);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -93,9 +122,9 @@ public class HomeController {
 
     /** Prints the status of every registered device. */
     public void printAllDevices() {
-        System.out.println("=== Registered Devices (" + deviceCount + "/" + MAX_DEVICES + ") ===");
+        logger.info("=== Registered Devices ({}/{}) ===", deviceCount, MAX_DEVICES);
         for (int i = 0; i < deviceCount; i++) {
-            System.out.println("  " + devices[i]);
+            logger.debug("  {}", devices[i]);
         }
     }
 

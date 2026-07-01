@@ -35,7 +35,7 @@ public class CommandParser {
      *   "LIGHT_01 TURN_ON"            → should return "TURN_ON"
      */
     public static String extractCommand(String fullCommand) {
-        String[] parts = fullCommand.split(" ");
+        String[] parts = fullCommand.trim().split("\\s+", 2);
         return parts[1];
     }
 }
