@@ -14,6 +14,9 @@ package com.bootcamp.smarthome.controller;
  */
 public class CommandParser {
 
+    private CommandParser() {
+    }
+
     /**
      * Extracts the device ID (first token) from the full command string.
      *
