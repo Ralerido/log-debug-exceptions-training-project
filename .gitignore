@@ -1,2 +1,8 @@
 /out
 /target
+/.idea/compiler.xml
+/.idea/.gitignore
+/.idea/encodings.xml
+/.idea/jarRepositories.xml
+/.idea/misc.xml
+/.idea/vcs.xml
